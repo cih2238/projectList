@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
+	<!-- jquery -->
+	<script src="https://code.jquery.com/jquery-latest.min.js"></script>
+    <!-- summernote -->
+    <script src="/js/summernote-lite.js"></script>
+	<script src="/js/lang/summernote-ko-KR.js"></script>
+	<link rel="stylesheet" href="/css/summernote-lite.css">
+
+    <style>
+        .m-b-1{
+            margin-bottom: 25px;
+        }
+        hr {
+            border-top: 2px solid; opacity: 1;
+        }
+    </style>
+</head>
+<body>
+	<form id="boardForm">
+	    <div class="container" style="padding-top: 33px;">
+	        <input type="text" class="form-control" placeholder="제목을 입력하세요." id="title" name="title" style="font-size: 2rem; border-radius: 0; margin-bottom: 10px;">
+	        <span>프로젝트 시작/종료일 </span><input type="date" id="startDate" name="startDate"><span>  -  </span><input type="date" id="endDate" name="endDate">
+	        <hr>
+	        <input type="text" class="form-control" placeholder="프로젝트 주소를 입력하세요." id="domain" name="domain" style="font-size: 1.2rem; border-radius: 0; margin-bottom: 10px;">
+	        <input type="text" class="form-control" placeholder="프로젝트 소개를 입력하세요." id="introduction" name="introduction" style="font-size: 1.2rem; border-radius: 0; margin-bottom: 10px;">
+	    </div>
+	    <div class="container">
+	    	<!-- summernote -->
+			<textarea id="summernote" name="content"></textarea>
+	        <hr>
+	        <div class="row">
+	            <div class="col-4" style="text-align: left;"><a href="javascript:goBack()">뒤로가기</a></div>
+	            <div class="col-4" style="text-align: center;"></div>
+	            <div class="col-4" style="text-align: right;"><a href="javascript:insertBoard()">작성하기</a></div>
+	        </div>
+	    </div>
+	</form>
+    <script>
+	    /* summernote 초기설정 */
+		$(document).ready(function() {
+			$('#summernote').summernote({
+			height: 450,                 // 에디터 높이
+			minHeight: null,             // 최소 높이
+			maxHeight: null,             // 최대 높이
+			focus: true,                  // 에디터 로딩후 포커스를 맞출지 여부
+			lang: "ko-KR",					// 한글 설정
+			placeholder: '최대 2048자까지 쓸 수 있습니다',	//placeholder 설정
+				callbacks: {	//여기 부분이 이미지를 첨부하는 부분
+					onImageUpload : function(files) {
+						uploadSummernoteImageFile(files[0],this);
+					},
+					onPaste: function (e) {
+						var clipboardData = e.originalEvent.clipboardData;
+						if (clipboardData && clipboardData.items && clipboardData.items.length) {
+							var item = clipboardData.items[0];
+							if (item.kind === 'file' && item.type.indexOf('image/') !== -1) {
+								e.preventDefault();
+							}
+						}
+					}
+				}
+			});
+		});
+
+	  	/**
+	  	* 이미지 파일 업로드
+	  	*/
+	  	function uploadSummernoteImageFile(file, editor) {
+	  		data = new FormData();
+	  		data.append("file", file);
+	  		$.ajax({
+				data : data,
+	  			type : "POST",
+	  			url : "/uploadSummernoteImageFile",
+	  			contentType : false,
+	  			processData : false,
+	  			success : function(data) {
+	              	//항상 업로드된 파일의 url이 있어야 한다.
+	              	console.log(data.url)
+	  				$(editor).summernote('insertImage', data.url);
+	  			}
+	  		});
+	  	}
+
+	  	$("div.note-editable").on('drop',function(e){
+	         for(i=0; i< e.originalEvent.dataTransfer.files.length; i++){
+	         	uploadSummernoteImageFile(e.originalEvent.dataTransfer.files[i],$("#summernote")[0]);
+	         }
+	        e.preventDefault();
+		})
+
+	    function insertBoard(){
+	    	$.ajax({
+	    		type : 'post',
+	    		url : '/insertBoard.do',
+	    		data : $("#boardForm").serialize(),
+	    		success : function(){
+					alert("작성완료");
+					location.href="/main";
+	    		},
+	    		error : function(){
+	    			alert("실패");
+	    		},
+	    	})
+	    }
+
+	    function goBack(){
+	    	var yn = confirm("작성중인 내용은 저장되지않습니다.\n뒤로 가시겠습니까?");
+	    	if(yn){
+	    		location.href="/main";
+	    	}
+	    }
+    </script>
+</body>
+</html>

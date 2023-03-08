@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.study.projectList.dao.IBoardDao">
+	<insert id="InsertBoard" parameterType="com.study.projectList.vo.BoardVo">
+		INSERT INTO board (title, content, start_date, end_date, introduction, domain)
+		 VALUE (#{title},#{content},#{startDate},#{endDate},#{introduction},#{domain})
+	</insert>
+
+	<select id="selectBoard" resultType="com.study.projectList.vo.BoardVo">
+		<![CDATA[
+		SELECT no
+			  ,title
+			  ,content
+			  ,start_date
+			  ,end_date
+			  ,introduction
+			  ,domain
+			  ,SUBSTRING_INDEX(SUBSTRING_INDEX(SUBSTRING_INDEX(REGEXP_SUBSTR(content,'<img[^>]*>'), '<img', -1), 'src="', -1), '"', 1) AS thumbnail
+		  FROM board
+		 ORDER BY no DESC
+		]]>
+	</select>
+
+	<select id="viewBoard" resultType="com.study.projectList.vo.BoardVo">
+		SELECT no
+			  ,title
+			  ,content
+			  ,start_date
+			  ,end_date
+			  ,introduction
+			  ,domain
+		  FROM board
+		 WHERE no = #{no}
+	</select>
+	
+	<select id="countBoard" resultType="String">
+		SELECT count(*) FROM board;
+	</select>
+</mapper>
